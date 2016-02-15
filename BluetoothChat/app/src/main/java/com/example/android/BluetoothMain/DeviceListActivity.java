@@ -18,6 +18,7 @@ package com.example.android.BluetoothMain;
 
 import java.util.Set;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -34,6 +35,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
@@ -66,6 +68,9 @@ public class DeviceListActivity extends Activity {
 
         // Set result CANCELED in case the user backs out
         setResult(Activity.RESULT_CANCELED);
+
+
+        final ActionBar actionBar = getActionBar();
 
         // Initialize the button to perform device discovery
         Button scanButton = (Button) findViewById(R.id.button_scan);
@@ -160,15 +165,16 @@ public class DeviceListActivity extends Activity {
 
             // Get the device MAC address, which is the last 17 chars in the View
             String info = ((TextView) v).getText().toString();
-            String address = info.substring(info.length() - 17);
+            if(!info.equals("No devices found")) {
+                String address = info.substring(info.length() - 17);
+                // Create the result Intent and include the MAC address
+                Intent intent = new Intent();
+                intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
 
-            // Create the result Intent and include the MAC address
-            Intent intent = new Intent();
-            intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
-
-            // Set result and finish this Activity
-            setResult(Activity.RESULT_OK, intent);
-            finish();
+                // Set result and finish this Activity
+                setResult(Activity.RESULT_OK, intent);
+                finish();
+            }
         }
     };
 

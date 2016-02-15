@@ -6,13 +6,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <ListView android:id="@+id/in"
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/in"
+        android:layout_weight="1"
+        android:scrollbars="vertical"
+        android:editable="false"
+        android:focusable="false"
+        android:singleLine="false"
+        android:background="@null"
+        android:gravity="top|left"
+        android:layout_gravity="center_horizontal" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="#009ada"></LinearLayout>
+
+    <ListView android:id="@+id/out"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:stackFromBottom="true"
         android:transcriptMode="alwaysScroll"
-        android:layout_weight="1"
-        />
+        android:layout_weight="2" />
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -21,13 +41,15 @@
         <EditText android:id="@+id/edit_text_out"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="3"
             android:layout_gravity="bottom"
             />
         <Button android:id="@+id/button_send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/send"
-            />
+            android:layout_weight="0"
+            android:layout_gravity="right" />
     </LinearLayout>
+
 </LinearLayout>

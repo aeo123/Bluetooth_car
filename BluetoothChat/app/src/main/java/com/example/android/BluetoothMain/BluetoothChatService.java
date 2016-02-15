@@ -31,6 +31,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.example.android.BluetoothMain.app.CcdActivity;
+import com.example.android.BluetoothMain.app.SerialPortActivity;
+
 /**
  * This class does all the work for setting up and managing Bluetooth
  * connections with other devices. It has a thread that listens for
@@ -60,6 +63,7 @@ public class BluetoothChatService {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private int mState;
+    private static int mapp;
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
@@ -67,6 +71,11 @@ public class BluetoothChatService {
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
+    public static final int  APP_MIAN=0;
+    public static final int  APP_UART=1;
+    public static final int  APP_CCD=2;
+    public static final int  APP_CAMERA=3;
+    public static final int  APP_DATA=4;
     /**
      * Constructor. Prepares a new BluetoothChat session.
      * @param context  The UI Activity Context
@@ -91,11 +100,20 @@ public class BluetoothChatService {
     }
 
     /**
+     * Return the current app name. */
+    public synchronized int getAppState() {
+        return mapp;
+    }
+    public synchronized void setAppState(int state) {
+        mapp = state;
+    }
+
+
+    /**
      * Return the current connection state. */
     public synchronized int getState() {
         return mState;
     }
-
     /**
      * Start the chat service. Specifically start AcceptThread to begin a
      * session in listening (server) mode. Called by the Activity onResume() */
@@ -300,7 +318,7 @@ public class BluetoothChatService {
                     // successful connection or an exception
                     socket = mmServerSocket.accept();
                 } catch (IOException e) {
-                    Log.e(TAG, "Socket Type: " + mSocketType + "accept() failed", e);
+                    Log.e(TAG, "Socket Type: " + mSocketType + " accept() failed", e);
                     break;
                 }
 
@@ -454,8 +472,29 @@ public class BluetoothChatService {
                     bytes = mmInStream.read(buffer);
 
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(BluetoothMain.MESSAGE_READ, bytes, -1, buffer)
-                            .sendToTarget();
+                    switch (getAppState()){
+                        case  APP_MIAN:
+                            mHandler.obtainMessage(BluetoothMain.MESSAGE_READ, bytes, -1, buffer)
+                                    .sendToTarget();
+                            break;
+                        case  APP_UART:
+                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
+                                    .sendToTarget();
+                            break;
+                        case  APP_CCD:
+//                            mHandler.obtainMessage(CcdActivity.MESSAGE_READ, bytes, -1, buffer)
+//                                    .sendToTarget();
+                            break;
+                        case APP_CAMERA:
+//                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
+//                                    .sendToTarget();
+                            break;
+                        case APP_DATA:
+//                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
+//                                    .sendToTarget();
+                            break;
+                    }
+
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
@@ -475,7 +514,8 @@ public class BluetoothChatService {
                 mmOutStream.write(buffer);
 
                 // Share the sent message back to the UI Activity
-                mHandler.obtainMessage(BluetoothMain.MESSAGE_WRITE, -1, -1, buffer)
+                if(getAppState() == APP_UART)
+                mHandler.obtainMessage(SerialPortActivity.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
