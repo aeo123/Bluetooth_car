@@ -4,17 +4,33 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.BluetoothMain.BluetoothChatService;
 import com.example.android.BluetoothMain.BluetoothMain;
 import com.example.android.BluetoothMain.R;
+
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by aeo on 2016/2/13.
@@ -38,16 +54,9 @@ public class CcdActivity extends Activity {
     // Intent request codes
     private static final int REQUEST_ENABLE_BT = 3;
 
-    // Layout Views
-
-    // Name of the connected device
-    private String mConnectedDeviceName = null;
-    // Array adapter for the conversation thread
-
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
-    // Member object for the chat services
-    private BluetoothChatService mChatService = null;
+
 
 
     @Override
@@ -66,24 +75,22 @@ public class CcdActivity extends Activity {
         actionBar.setHomeButtonEnabled(true);
     }
 
-
-    //put back buton to mainactivity
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK){
-            Intent myIntent = new Intent();
-            myIntent = new Intent(CcdActivity.this,BluetoothMain.class);
-            startActivity(myIntent);
-            this.finish();
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
     @Override
     public void onStart() {
         super.onStart();
         if(D) Log.e(TAG, "++ ON START ++");
+        // If BT is not on, request that it be enabled.
+        // setupChat() will then be called during onActivityResult
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
 
+        }else{
+            // Initialize the BluetoothChatService to perform bluetooth connections
+            if (BluetoothMain.mChatService == null)
+                BluetoothMain.mChatService = new BluetoothChatService(this, mHandler);
+            //setupChat();
+        }
     }
 
     @Override
@@ -94,14 +101,13 @@ public class CcdActivity extends Activity {
         // Performing this check in onResume() covers the case in which BT was
         // not enabled during onStart(), so we were paused to enable it...
         // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
-//        if (mChatService != null) {
-//            // Only if the state is STATE_NONE, do we know that we haven't started already
-//            if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
-//                // Start the Bluetooth chat services
-//                mChatService.start();
-//            }
-//        }
-//        mChatService.setAppState(mChatService.APP_CCD);
+        if (BluetoothMain.mChatService != null) {
+            if (BluetoothMain.mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+                Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+            }
+            BluetoothMain.mChatService.setAppState(BluetoothMain.mChatService.APP_CCD);
+        }
+
     }
     @Override
     public synchronized void onPause() {
@@ -122,7 +128,161 @@ public class CcdActivity extends Activity {
         if(D) Log.e(TAG, "--- ON DESTROY ---");
     }
 
+    // The Handler that gets information back from the BluetoothChatService
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+
+                case MESSAGE_WRITE:
+                    break;
+                case MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    break;
+                case MESSAGE_TOAST:
+                    Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
+                            Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(D) Log.d(TAG, "onActivityResult " + resultCode);
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                // When the request to enable Bluetooth returns
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, so set up a chat session
+                    //setupChat();
+                } else {
+                    // User did not enable Bluetooth or an error occurred
+                    Log.d(TAG, "BT not enabled");
+                    Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+        }
+    }
+
+    //put back buton to mainactivity
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            this.finish();
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.ccd_menu, menu);
+        return true;
+    }
 
 
+    //put actionbar back buton to mainactivity
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+                return true;
+            case R.id.ccd_num:
+                return true;
+            case R.id.ccd_mode:
+                return true;
+            case R.id.ccd_save:
+                ;
+                return true;
+        }
+        return false;
+    }
+
+
+
+
+//    /**
+//     * @param 将字节数组转换为ImageView可调用的Bitmap对象
+//     * @param bytes
+//     * @param opts
+//     * @return Bitmap
+//     */
+    public static Bitmap getPicFromBytes(byte[] bytes,
+                                         BitmapFactory.Options opts) {
+        if (bytes != null)
+            if (opts != null)
+                return BitmapFactory.decodeByteArray(bytes, 0, bytes.length,
+                        opts);
+            else
+                return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        return null;
+    }
+
+    /**
+     * 把Bitmap转Byte
+     */
+    public static byte[] Bitmap2Bytes(Bitmap bm){
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        return baos.toByteArray();
+    }
+//    /**
+//     * @param 图片缩放
+//     * @param bitmap 对象
+//     * @param w 要缩放的宽度
+//     * @param h 要缩放的高度
+//     * @return newBmp 新 Bitmap对象
+//     */
+    public static Bitmap zoomBitmap(Bitmap bitmap, int w, int h){
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        Matrix matrix = new Matrix();
+        float scaleWidth = ((float) w / width);
+        float scaleHeight = ((float) h / height);
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap newBmp = Bitmap.createBitmap(bitmap, 0, 0, width, height,
+                matrix, true);
+        return newBmp;
+    }
+
+    /**
+     * 把字节数组保存为一个文件
+     */
+    public static File getFileFromBytes(byte[] b, String outputFile) {
+        BufferedOutputStream stream = null;
+        File file = null;
+        try {
+            file = new File(outputFile);
+            FileOutputStream fstream = new FileOutputStream(file);
+            stream = new BufferedOutputStream(fstream);
+            stream.write(b);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+        return file;
+    }
+
+
+    public static byte[] readStream(InputStream inStream) throws Exception {
+        byte[] buffer = new byte[1024];
+        int len = -1;
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        while ((len = inStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, len);
+        }
+        byte[] data = outStream.toByteArray();
+        outStream.close();
+        inStream.close();
+        return data;
+
+    }
 
 }

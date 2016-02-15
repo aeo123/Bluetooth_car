@@ -116,7 +116,10 @@ public class SerialPortActivity extends Activity {
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
 
         }else{
-            setupChat();
+            // Initialize the BluetoothChatService to perform bluetooth connections
+            if (BluetoothMain.mChatService == null)
+                BluetoothMain.mChatService = new BluetoothChatService(this, mHandler);
+                setupChat();
         }
     }
 
@@ -165,10 +168,6 @@ public class SerialPortActivity extends Activity {
                 //mInEditText.getText().append(message);
             }
         });
-
-        // Initialize the BluetoothChatService to perform bluetooth connections
-        if (BluetoothMain.mChatService == null)
-            BluetoothMain.mChatService = new BluetoothChatService(this, mHandler);
 
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
@@ -258,7 +257,7 @@ public class SerialPortActivity extends Activity {
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+
                     mInEditText.getText().append(readMessage);
                     break;
 
@@ -291,8 +290,8 @@ public class SerialPortActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if(keyCode == KeyEvent.KEYCODE_BACK){
-            Intent myIntent = new Intent(SerialPortActivity.this,BluetoothMain.class);
-            startActivity(myIntent);
+            //Intent myIntent = new Intent(SerialPortActivity.this,BluetoothMain.class);
+            //startActivity(myIntent);
             this.finish();
             return true;
         }
@@ -312,8 +311,8 @@ public class SerialPortActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                Intent   mIntent = new Intent(SerialPortActivity.this, BluetoothMain.class);
-                startActivity(mIntent);
+                //Intent   mIntent = new Intent(SerialPortActivity.this, BluetoothMain.class);
+                //startActivity(mIntent);
                 this.finish();
                 return true;
             case R.id.clear_in:

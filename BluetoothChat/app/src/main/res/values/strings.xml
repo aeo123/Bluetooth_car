@@ -51,4 +51,7 @@
     <string name="SerialPort">SerialPort</string>
     <!--ccdActivity-->
     <string name="Ccd">CCD</string>
+    <string name="ccd_num">number</string>
+    <string name="ccd_mode">mode</string>
+    <string name="ccd_save">save</string>
 </resources>
