@@ -18,9 +18,12 @@ package com.example.android.BluetoothMain;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -36,6 +39,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.android.BluetoothMain.app.CcdActivity;
 import com.example.android.BluetoothMain.app.SerialPortActivity;
 
 /**
@@ -43,7 +47,7 @@ import com.example.android.BluetoothMain.app.SerialPortActivity;
  */
 public class BluetoothMain extends Activity {
     // Debugging
-    private static final String TAG = "BluetoothChat";
+    private static final String TAG = "BluetoothMain";
     private static final boolean D = true;
 
     // Message types sent from the BluetoothChatService Handler
@@ -69,14 +73,10 @@ public class BluetoothMain extends Activity {
 
     // Name of the connected device
     private String mConnectedDeviceName = null;
-    // Array adapter for the conversation thread
-    private ArrayAdapter<String> mConversationArrayAdapter;
-    // String buffer for outgoing messages
-    private StringBuffer mOutStringBuffer;
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
     // Member object for the chat services
-    private BluetoothChatService mChatService = null;
+    public static BluetoothChatService mChatService = null;
 
 
     @Override
@@ -105,7 +105,18 @@ public class BluetoothMain extends Activity {
                 final Intent intent = new Intent(BluetoothMain.this,SerialPortActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
-                finish();
+                //finish();
+            }
+        });
+        //triger ccd app
+        ImageView icon2=(ImageView)findViewById(R.id.icon2);
+        icon2.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                final Intent intent = new Intent(BluetoothMain.this,CcdActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(intent);
+                //finish();
             }
         });
     }
@@ -122,7 +133,8 @@ public class BluetoothMain extends Activity {
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         // Otherwise, setup the chat session
         } else {
-            if (mChatService == null) ;
+            if (mChatService == null)
+                mChatService = new BluetoothChatService(this, mHandler);
         }
     }
 
@@ -140,17 +152,19 @@ public class BluetoothMain extends Activity {
               // Start the Bluetooth chat services
               mChatService.start();
             }
+            mChatService.setAppState(mChatService.APP_MIAN);
         }
+
     }
 
     @Override
-    public synchronized void onPause() {
+    public synchronized void onPause () {
         super.onPause();
         if(D) Log.e(TAG, "- ON PAUSE -");
     }
 
     @Override
-    public void onStop() {
+    public void onStop () {
         super.onStop();
         if(D) Log.e(TAG, "-- ON STOP --");
     }
@@ -159,7 +173,7 @@ public class BluetoothMain extends Activity {
     public void onDestroy() {
         super.onDestroy();
         // Stop the Bluetooth chat services
-        if (mChatService != null) mChatService.stop();
+       if (mChatService != null) mChatService.stop();
         if(D) Log.e(TAG, "--- ON DESTROY ---");
     }
 
@@ -177,10 +191,12 @@ public class BluetoothMain extends Activity {
     private final void setStatus(int resId) {
         final ActionBar actionBar = getActionBar();
         actionBar.setSubtitle(resId);
+
     }
 
     private final void setStatus(CharSequence subTitle) {
         final ActionBar actionBar = getActionBar();
+
         actionBar.setSubtitle(subTitle);
     }
 
@@ -194,7 +210,6 @@ public class BluetoothMain extends Activity {
                 switch (msg.arg1) {
                 case BluetoothChatService.STATE_CONNECTED:
                     setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
-                    mConversationArrayAdapter.clear();
                     break;
                 case BluetoothChatService.STATE_CONNECTING:
                     setStatus(R.string.title_connecting);
@@ -206,15 +221,15 @@ public class BluetoothMain extends Activity {
                 }
                 break;
             case MESSAGE_WRITE:
-                byte[] writeBuf = (byte[]) msg.obj;
+                //byte[] writeBuf = (byte[]) msg.obj;
                 // construct a string from the buffer
-                String writeMessage = new String(writeBuf);
+                //String writeMessage = new String(writeBuf);
                // mConversationArrayAdapter.add("Me:  " + writeMessage);
                 break;
             case MESSAGE_READ:
-                byte[] readBuf = (byte[]) msg.obj;
+                //byte[] readBuf = (byte[]) msg.obj;
                 // construct a string from the valid bytes in the buffer
-                String readMessage = new String(readBuf, 0, msg.arg1);
+                //String readMessage = new String(readBuf, 0, msg.arg1);
                 //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
                 break;
             case MESSAGE_DEVICE_NAME:
@@ -270,6 +285,22 @@ public class BluetoothMain extends Activity {
         mChatService.connect(device, secure);
     }
 
+    //退出提醒
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setTitle("BiliBiliCar")
+                .setMessage("关闭程序?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        finish();
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -298,9 +329,5 @@ public class BluetoothMain extends Activity {
         }
         return false;
     }
-
-
-
-
 }
 

@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -41,6 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.BluetoothMain.BluetoothChatService;
+import com.example.android.BluetoothMain.BluetoothMain;
 import com.example.android.BluetoothMain.DeviceListActivity;
 import com.example.android.BluetoothMain.R;
 
@@ -64,15 +66,14 @@ public class SerialPortActivity extends Activity {
     public static final String TOAST = "toast";
 
     // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
-    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+
     private static final int REQUEST_ENABLE_BT = 3;
 
     // Layout Views
     private ListView mConversationView;
     private EditText mOutEditText;
-    private Button mSendButton;
-
+    private Button  mSendButton;
+    private EditText mInEditText;
     // Name of the connected device
     private String mConnectedDeviceName = null;
     // Array adapter for the conversation thread
@@ -82,7 +83,7 @@ public class SerialPortActivity extends Activity {
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
     // Member object for the chat services
-    private BluetoothChatService mChatService = null;
+
 
 
     @Override
@@ -93,23 +94,50 @@ public class SerialPortActivity extends Activity {
         // Set up the window layout
         setContentView(R.layout.serialport);
 
-        // If BT is not on, request that it be enabled.
-        // setupChat() will then be called during onActivityResult
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
 
+        //add actionbar back button
+        final ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
     }
+
+
 
     @Override
     public void onStart() {
         super.onStart();
         if(D) Log.e(TAG, "++ ON START ++");
+        // If BT is not on, request that it be enabled.
+        // setupChat() will then be called during onActivityResult
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
 
+        }else{
+            // Initialize the BluetoothChatService to perform bluetooth connections
+            if (BluetoothMain.mChatService == null)
+                BluetoothMain.mChatService = new BluetoothChatService(this, mHandler);
+                setupChat();
+        }
     }
 
     @Override
     public synchronized void onResume() {
         super.onResume();
         if(D) Log.e(TAG, "+ ON RESUME +");
+
+        // Performing this check in onResume() covers the case in which BT was
+        // not enabled during onStart(), so we were paused to enable it...
+        // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
+        if (BluetoothMain.mChatService != null) {
+            if (BluetoothMain.mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+                Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+            }
+            BluetoothMain.mChatService.setAppState(BluetoothMain.mChatService.APP_UART);
+        }
+
     }
 
     private void setupChat() {
@@ -117,8 +145,13 @@ public class SerialPortActivity extends Activity {
 
         // Initialize the array adapter for the conversation thread
         mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
-        mConversationView = (ListView) findViewById(R.id.in);
+        mConversationView = (ListView) findViewById(R.id.out);
         mConversationView.setAdapter(mConversationArrayAdapter);
+
+        //Initialize data in EditText and set scroll
+        mInEditText=(EditText)findViewById(R.id.in);
+        mInEditText.setMovementMethod(ScrollingMovementMethod.getInstance());
+        mInEditText.setSelection(mInEditText.getText().length(), mInEditText.getText().length());
 
         // Initialize the compose field with a listener for the return key
         mOutEditText = (EditText) findViewById(R.id.edit_text_out);
@@ -132,11 +165,9 @@ public class SerialPortActivity extends Activity {
                 TextView view = (TextView) findViewById(R.id.edit_text_out);
                 String message = view.getText().toString();
                 sendMessage(message);
+                //mInEditText.getText().append(message);
             }
         });
-
-        // Initialize the BluetoothChatService to perform bluetooth connections
-        mChatService = new BluetoothChatService(this, mHandler);
 
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
@@ -169,7 +200,7 @@ public class SerialPortActivity extends Activity {
      */
     private void sendMessage(String message) {
         // Check that we're actually connected before trying anything
-        if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+        if (BluetoothMain.mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
             Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -178,7 +209,7 @@ public class SerialPortActivity extends Activity {
         if (message.length() > 0) {
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
-            mChatService.write(send);
+            BluetoothMain.mChatService.write(send);
 
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
@@ -215,22 +246,7 @@ public class SerialPortActivity extends Activity {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case MESSAGE_STATE_CHANGE:
-                    if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
-                    switch (msg.arg1) {
-                        case BluetoothChatService.STATE_CONNECTED:
-                            setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
-                            mConversationArrayAdapter.clear();
-                            break;
-                        case BluetoothChatService.STATE_CONNECTING:
-                            setStatus(R.string.title_connecting);
-                            break;
-                        case BluetoothChatService.STATE_LISTEN:
-                        case BluetoothChatService.STATE_NONE:
-                            setStatus(R.string.title_not_connected);
-                            break;
-                    }
-                    break;
+
                 case MESSAGE_WRITE:
                     byte[] writeBuf = (byte[]) msg.obj;
                     // construct a string from the buffer
@@ -241,14 +257,10 @@ public class SerialPortActivity extends Activity {
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+
+                    mInEditText.getText().append(readMessage);
                     break;
-                case MESSAGE_DEVICE_NAME:
-                    // save the connected device's name
-                    mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-                    Toast.makeText(getApplicationContext(), "Connected to "
-                            + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-                    break;
+
                 case MESSAGE_TOAST:
                     Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
                             Toast.LENGTH_SHORT).show();
@@ -257,7 +269,65 @@ public class SerialPortActivity extends Activity {
         }
     };
 
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(D) Log.d(TAG, "onActivityResult " + resultCode);
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                // When the request to enable Bluetooth returns
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, so set up a chat session
+                    setupChat();
+                } else {
+                    // User did not enable Bluetooth or an error occurred
+                    Log.d(TAG, "BT not enabled");
+                    Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+        }
+    }
 
+    //put back buton to mainactivity
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            //Intent myIntent = new Intent(SerialPortActivity.this,BluetoothMain.class);
+            //startActivity(myIntent);
+            this.finish();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.seriaport_menu, menu);
+        return true;
+    }
+
+
+    //put actionbar back buton to mainactivity
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                //Intent   mIntent = new Intent(SerialPortActivity.this, BluetoothMain.class);
+                //startActivity(mIntent);
+                this.finish();
+                return true;
+            case R.id.clear_in:
+                mOutStringBuffer.setLength(0);
+                mInEditText.setText(mOutStringBuffer);
+                return true;
+            case R.id.clear_out:
+                mConversationArrayAdapter.clear();
+                return true;
+            case R.id.change_hex:
+                ;
+                return true;
+        }
+        return false;
+    }
 
 
 }
