@@ -18,10 +18,14 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -48,22 +52,18 @@ public class CcdActivity extends Activity {
     // Debugging
     private static final String TAG = "CCDActivity";
     private static final boolean D = true;
-
-
-
-
     // Intent request codes
     private static final int REQUEST_ENABLE_BT = 3;
-
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
-
-
+    private static ImageView ig_ccd;
+    private static ListView ccd_list;
+    private static View ccd_view;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(D) Log.e(TAG, "+++ ON CREATE +++");
+        if (D) Log.e(TAG, "+++ ON CREATE +++");
 
         // Set up the window layout
         setContentView(R.layout.ccd_activity);
@@ -74,29 +74,63 @@ public class CcdActivity extends Activity {
         final ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
+
+        ig_ccd = (ImageView) findViewById(R.id.single_ccd);
+        ccd_list = (ListView) findViewById(R.id.continuous_view);
+        ccd_view = LayoutInflater.from(this).inflate(R.layout.ccd_fps, null);
+        ccd_list.setAdapter(ccd_adpter);
     }
+
+    BaseAdapter ccd_adpter = new BaseAdapter() {
+        @Override
+        public int getCount() {
+            return 0;
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View view, ViewGroup parent) {
+            ImageView img;
+            if (view == null) {
+                img = new ImageView(CcdActivity.this);
+            } else {
+                img = (ImageView) view;
+            }
+            //img.;
+            return img;
+        }
+    };
 
     @Override
     public void onStart() {
         super.onStart();
-        if(D) Log.e(TAG, "++ ON START ++");
+        if (D) Log.e(TAG, "++ ON START ++");
         // If BT is not on, request that it be enabled.
         // setupChat() will then be called during onActivityResult
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
 
-        }else{
+        } else {
             // Initialize the BluetoothChatService to perform bluetooth connections
             if (BluetoothMain.mChatService == null)
-              this.finish();
+                this.finish();
         }
     }
 
     @Override
     public synchronized void onResume() {
         super.onResume();
-        if(D) Log.e(TAG, "+ ON RESUME +");
+        if (D) Log.e(TAG, "+ ON RESUME +");
 
         // Performing this check in onResume() covers the case in which BT was
         // not enabled during onStart(), so we were paused to enable it...
@@ -109,29 +143,29 @@ public class CcdActivity extends Activity {
         }
 
     }
+
     @Override
     public synchronized void onPause() {
         super.onPause();
-        if(D) Log.e(TAG, "- ON PAUSE -");
+        if (D) Log.e(TAG, "- ON PAUSE -");
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if(D) Log.e(TAG, "-- ON STOP --");
+        if (D) Log.e(TAG, "-- ON STOP --");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         // Stop the Bluetooth chat services
-        if(D) Log.e(TAG, "--- ON DESTROY ---");
+        if (D) Log.e(TAG, "--- ON DESTROY ---");
     }
 
 
-
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(D) Log.d(TAG, "onActivityResult " + resultCode);
+        if (D) Log.d(TAG, "onActivityResult " + resultCode);
         switch (requestCode) {
             case REQUEST_ENABLE_BT:
                 // When the request to enable Bluetooth returns
@@ -151,53 +185,49 @@ public class CcdActivity extends Activity {
     //put back buton to mainactivity
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK){
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
             this.finish();
         }
         return super.onKeyDown(keyCode, event);
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.ccd_menu, menu);
         return true;
     }
-    private static final int WIDTH=128;
-    private static final int HEIGHT=60;
-    private static final int STRIDE=128;//must be >=WIDTH
-    int[] img=new int[128*60];
-    int[] img1=new int[128];
-    private void init_img(int[] a){
-       for(int i=0;i<128;i++){
-            img1[i]=i<<9;
+
+    private static final int WIDTH = 128;
+    private static final int HEIGHT = 60;
+    private static final int STRIDE = 128;//must be >=WIDTH
+    private static int[] img = new int[WIDTH * HEIGHT];
+    private static int[] img1 = new int[WIDTH];
+    private static byte[] temp = new byte[WIDTH + 10];
+
+    private static void init_img(int[] a) {
+        temp[0] = (byte) 0x02;
+        temp[1] = ~(byte) 0x02;
+        temp[130] = ~(byte) 0x02;
+        temp[131] = (byte) 0x02;
+        for (int i = 2; i < 130; i++) {
+            temp[i] = (byte) (i - 2);
         }
-        for(int i=0;i<60;i++){
-         System.arraycopy(img1, 0, img, 128*i, 128);
+        ccdDataAnl(temp, 138);
+    }
+
+    private static void show_img(byte[] a) {
+        for (int i = 0; i < WIDTH; i++) {
+            img1[i] = ((a[i] & 0xff)) << 24;
         }
-
-        Bitmap[] pic=new Bitmap[1];
-        pic[0]=Bitmap.createBitmap(img,0, STRIDE, WIDTH, HEIGHT, Bitmap.Config.RGB_565);
-        ImageView ig=(ImageView) findViewById(R.id.single_ccd);
-
-        ig.setImageBitmap(pic[0]);
+        for (int i = 0; i < HEIGHT; i++) {
+            System.arraycopy(img1, 0, img, WIDTH * i, WIDTH);
+        }
+        Bitmap[] pic = new Bitmap[1];
+        pic[0] = Bitmap.createBitmap(img, 0, STRIDE, WIDTH, HEIGHT, Bitmap.Config.ARGB_8888);
+        ig_ccd.setImageBitmap(pic[0]);
     }
-    public static Bitmap bitmap2Gray(Bitmap bmSrc)
-    {
-        int width, height;
-        height = bmSrc.getHeight();
-        width = bmSrc.getWidth();
-        Bitmap bmpGray = null;
-        bmpGray = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-        Canvas c = new Canvas(bmpGray);
-        Paint paint = new Paint();
-        ColorMatrix cm = new ColorMatrix();
-        cm.setSaturation(0);
-        ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
-        paint.setColorFilter(f);
-        c.drawBitmap(bmSrc, 0, 0, paint);
-        return bmpGray;
 
-    }
 
     //put actionbar back buton to mainactivity
     @Override
@@ -219,7 +249,7 @@ public class CcdActivity extends Activity {
         return false;
     }
 
-//    /**
+    //    /**
 //     * @param 将字节数组转换为ImageView可调用的Bitmap对象
 //     * @param bytes
 //     * @param opts
@@ -239,19 +269,20 @@ public class CcdActivity extends Activity {
     /**
      * 把Bitmap转Byte
      */
-    public static byte[] Bitmap2Bytes(Bitmap bm){
+    public static byte[] Bitmap2Bytes(Bitmap bm) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
         return baos.toByteArray();
     }
-//    /**
+
+    //    /**
 //     * @param 图片缩放
 //     * @param bitmap 对象
 //     * @param w 要缩放的宽度
 //     * @param h 要缩放的高度
 //     * @return newBmp 新 Bitmap对象
 //     */
-    public static Bitmap zoomBitmap(Bitmap bitmap, int w, int h){
+    public static Bitmap zoomBitmap(Bitmap bitmap, int w, int h) {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         Matrix matrix = new Matrix();
@@ -300,45 +331,48 @@ public class CcdActivity extends Activity {
         outStream.close();
         inStream.close();
         return data;
-
     }
 
-    static byte[] RX_Data = new byte[200];	//接收到的数据，AA开头
+    static byte[] RX_Data = new byte[128];    //接收到的数据，AA开头
     static int rxstate = 0;
     static int rxcnt = 0;
-    static boolean ccdDataAnl(byte[] data, int len) {
+
+    public static boolean ccdDataAnl(byte[] data, int len) {
         for (int i = 0; i < len; i++) {
-            if (rxstate == 0)//寻找开头
+            if (rxstate == 0)//寻找开头02
             {
-                if (data[i] == (byte) 2) {
+                if (data[i] == (byte) 0x02) {
                     rxstate = 1;
-
                 }
-            } else if (rxstate == 1)//寻找第二个AA
+            } else if (rxstate == 1)//寻找第二个~2
             {
-                if (data[i] == (byte) ~2) {
+                if (data[i] == ~((byte) 0x02)) {
                     rxstate = 2;
-
+                    rxcnt = 0;
                 } else
                     rxstate = 0;
-            }else if(rxstate == 2){
+            } else if (rxstate == 2) {
                 RX_Data[rxcnt] = data[i];
                 rxcnt++;
-                if(rxcnt==128)
-                    rxstate=3;
-            }else if(rxstate ==3){
-                if (data[i] == (byte) ~2) {
+                if (rxcnt == 128) {
+                    rxstate = 3;
+                }
+            } else if (rxstate == 3) {
+                if (data[i] == ~((byte) 0x02)) {
                     rxstate = 4;
-                    RX_Data[0] = (byte) ~2;
-                }
-            }else if(rxstate ==4){
-                if (data[i] == (byte) 2) {
+                    //RX_Data[++rxcnt] =~((byte)0x02);
+                } else {
                     rxstate = 0;
-                    RX_Data[0] = (byte) 2;
-                    return true;
                 }
+            } else if (rxstate == 4) {
+                if (data[i] == (byte) 0x02) {
+                    rxstate = 0;
+                    // RX_Data[++rxcnt] = (byte) 0x02;
+                    show_img(RX_Data);
+                    return true;
+                } else
+                    rxstate = 0;
             }
-
         }
         return false;
     }

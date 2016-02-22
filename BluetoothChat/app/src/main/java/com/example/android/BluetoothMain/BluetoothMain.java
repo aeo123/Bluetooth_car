@@ -238,7 +238,6 @@ public class BluetoothMain extends Activity {
                 }
                 break;
             case MESSAGE_READ:
-
 //                dHandler.obtainMessage(MESSAGE_READ, msg.arg1, -1, msg.obj)
 //                        .sendToTarget();
                 byte[] readBuf = (byte[]) msg.obj;
@@ -247,13 +246,10 @@ public class BluetoothMain extends Activity {
 
                 switch (mChatService.getAppState()) {
                     case BluetoothChatService.APP_UART:
-
                         SerialPortActivity.mConversationArrayAdapter_in.add(mConnectedDeviceName+": " +readMessage);
-
                         break;
                     case BluetoothChatService.APP_CCD:
-                        int[] cdata = (int[])msg.obj;
-//
+                        CcdActivity.ccdDataAnl(readBuf,msg.arg1);
                         break;
                     case BluetoothChatService.APP_CAMERA:
 //                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)

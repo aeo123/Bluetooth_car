@@ -51,8 +51,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="5dp">
+        android:layout_marginRight="20dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -444,62 +443,152 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp">
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="ax:"
             android:id="@+id/text_ax"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:layout_marginLeft="10dp"
+            android:gravity="center"
+            android:textSize="15dp" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/textView2"
-            android:layout_weight="1" />
+            android:text="0"
+            android:id="@+id/ax"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:textSize="15dp"
+            android:enabled="true" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="ay:"
             android:id="@+id/text_ay"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textSize="15dp" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/textView4"
-            android:layout_weight="1" />
+            android:text="0"
+            android:id="@+id/ay"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:textSize="15dp"
+            android:enabled="true" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/textView5"
-            android:layout_weight="1" />
+            android:text="az:"
+            android:id="@+id/text_az"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textSize="15dp" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/textView6"
-            android:layout_weight="1" />
+            android:text="0"
+            android:id="@+id/az"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            android:enabled="true" />
     </LinearLayout>
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="65dp"
-        android:layout_marginTop="40dp">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="gx:"
+            android:id="@+id/text_gx"
+            android:layout_weight="1"
+            android:layout_marginLeft="10dp"
+            android:gravity="center"
+            android:textSize="15dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="0"
+            android:id="@+id/gx"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:textSize="15dp"
+            android:enabled="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="gy:"
+            android:id="@+id/text_gy"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textSize="15dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="0"
+            android:id="@+id/gy"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:textSize="15dp"
+            android:enabled="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="gz:"
+            android:id="@+id/text_gz"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textSize="15dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="0"
+            android:id="@+id/gz"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            android:enabled="true" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="10dp">
 
         <Button
             android:layout_width="match_parent"
@@ -519,7 +608,7 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="65dp"
+        android:layout_height="60dp"
         android:layout_marginTop="10dp">
 
         <Button
@@ -540,7 +629,7 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="65dp"
+        android:layout_height="60dp"
         android:layout_marginTop="10dp">
 
         <Button

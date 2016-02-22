@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@drawable/background_white">
 
 
     <LinearLayout
@@ -148,19 +149,24 @@
 
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:id="@+id/single_ccd"
-        android:layout_weight="3"
+        android:layout_weight="6"
         android:layout_marginTop="10dp"
         android:background="@drawable/border_black" />
 
-    <ImageView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/continuous_view"
-        android:layout_weight="6"
+        android:layout_height="match_parent"
+        android:layout_weight="4"
         android:background="@drawable/border_black"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="3dp" />
+        android:layout_marginTop="-2dp">
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/continuous_view" />
+    </LinearLayout>
 
 </LinearLayout>
