@@ -14,4 +14,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        compile 'com.github.navasmdc:MaterialDesign:1.5@aar'
+    }
 }
