@@ -51,9 +51,9 @@ public class BluetoothChatService {
 
     // Unique UUID for this application
     private static final UUID MY_UUID_SECURE =
-        UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66");
+        UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final UUID MY_UUID_INSECURE =
-        UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
+        UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     // Member fields
     private final BluetoothAdapter mAdapter;
@@ -63,10 +63,10 @@ public class BluetoothChatService {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private int mState;
-    private static int mapp;
+    private  static int mapp;
 
     // Constants that indicate the current connection state
-    public static final int STATE_NONE = 0;       // we're doing nothing
+     static final int STATE_NONE = 0;       // we're doing nothing
     public static final int STATE_LISTEN = 1;     // now listening for incoming connections
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
@@ -101,11 +101,13 @@ public class BluetoothChatService {
 
     /**
      * Return the current app name. */
-    public synchronized int getAppState() {
+    public  int getAppState() {
         return mapp;
     }
-    public synchronized void setAppState(int state) {
+    public  void setAppState(int state) {
+
         mapp = state;
+        if (D) Log.d(TAG, "app_state:" + state);
     }
 
 
@@ -470,30 +472,9 @@ public class BluetoothChatService {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
+                    mHandler.obtainMessage(BluetoothMain.MESSAGE_READ, bytes, -1, buffer)
+                            .sendToTarget();
 
-                    // Send the obtained bytes to the UI Activity
-                    switch (getAppState()){
-                        case  APP_MIAN:
-                            mHandler.obtainMessage(BluetoothMain.MESSAGE_READ, bytes, -1, buffer)
-                                    .sendToTarget();
-                            break;
-                        case  APP_UART:
-                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
-                                    .sendToTarget();
-                            break;
-                        case  APP_CCD:
-//                            mHandler.obtainMessage(CcdActivity.MESSAGE_READ, bytes, -1, buffer)
-//                                    .sendToTarget();
-                            break;
-                        case APP_CAMERA:
-//                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
-//                                    .sendToTarget();
-                            break;
-                        case APP_DATA:
-//                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
-//                                    .sendToTarget();
-                            break;
-                    }
 
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
@@ -514,8 +495,8 @@ public class BluetoothChatService {
                 mmOutStream.write(buffer);
 
                 // Share the sent message back to the UI Activity
-                if(getAppState() == APP_UART)
-                mHandler.obtainMessage(SerialPortActivity.MESSAGE_WRITE, -1, -1, buffer)
+
+                mHandler.obtainMessage(BluetoothMain.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);

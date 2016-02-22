@@ -58,5 +58,8 @@
             android:label="@string/Ccd"
             android:configChanges="orientation|keyboardHidden" />
 
+        <activity android:name=".app.DataSendActivity"
+            android:label="@string/DataSend"
+            android:configChanges="orientation|keyboardHidden" />
     </application>
 </manifest>

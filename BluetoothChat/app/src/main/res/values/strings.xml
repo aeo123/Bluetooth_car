@@ -54,4 +54,6 @@
     <string name="ccd_num">number</string>
     <string name="ccd_mode">mode</string>
     <string name="ccd_save">save</string>
+    <string name="DataSend">DataSend</string>
+
 </resources>

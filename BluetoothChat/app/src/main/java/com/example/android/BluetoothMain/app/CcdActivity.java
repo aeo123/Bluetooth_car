@@ -6,7 +6,13 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -18,6 +24,7 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -32,6 +39,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static android.graphics.Bitmap.createBitmap;
+
 /**
  * Created by aeo on 2016/2/13.
  */
@@ -40,16 +49,8 @@ public class CcdActivity extends Activity {
     private static final String TAG = "CCDActivity";
     private static final boolean D = true;
 
-    // Message types sent from the BluetoothChatService Handler
-    public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_DEVICE_NAME = 4;
-    public static final int MESSAGE_TOAST = 5;
 
-    // Key names received from the BluetoothChatService Handler
-    public static final String DEVICE_NAME = "device_name";
-    public static final String TOAST = "toast";
+
 
     // Intent request codes
     private static final int REQUEST_ENABLE_BT = 3;
@@ -88,8 +89,7 @@ public class CcdActivity extends Activity {
         }else{
             // Initialize the BluetoothChatService to perform bluetooth connections
             if (BluetoothMain.mChatService == null)
-                BluetoothMain.mChatService = new BluetoothChatService(this, mHandler);
-            //setupChat();
+              this.finish();
         }
     }
 
@@ -128,24 +128,7 @@ public class CcdActivity extends Activity {
         if(D) Log.e(TAG, "--- ON DESTROY ---");
     }
 
-    // The Handler that gets information back from the BluetoothChatService
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
 
-                case MESSAGE_WRITE:
-                    break;
-                case MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
-                    break;
-                case MESSAGE_TOAST:
-                    Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
-                            Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(D) Log.d(TAG, "onActivityResult " + resultCode);
@@ -155,6 +138,7 @@ public class CcdActivity extends Activity {
                 if (resultCode == Activity.RESULT_OK) {
                     // Bluetooth is now enabled, so set up a chat session
                     //setupChat();
+                    ;
                 } else {
                     // User did not enable Bluetooth or an error occurred
                     Log.d(TAG, "BT not enabled");
@@ -178,7 +162,42 @@ public class CcdActivity extends Activity {
         inflater.inflate(R.menu.ccd_menu, menu);
         return true;
     }
+    private static final int WIDTH=128;
+    private static final int HEIGHT=60;
+    private static final int STRIDE=128;//must be >=WIDTH
+    int[] img=new int[128*60];
+    int[] img1=new int[128];
+    private void init_img(int[] a){
+       for(int i=0;i<128;i++){
+            img1[i]=i<<9;
+        }
+        for(int i=0;i<60;i++){
+         System.arraycopy(img1, 0, img, 128*i, 128);
+        }
 
+        Bitmap[] pic=new Bitmap[1];
+        pic[0]=Bitmap.createBitmap(img,0, STRIDE, WIDTH, HEIGHT, Bitmap.Config.RGB_565);
+        ImageView ig=(ImageView) findViewById(R.id.single_ccd);
+
+        ig.setImageBitmap(pic[0]);
+    }
+    public static Bitmap bitmap2Gray(Bitmap bmSrc)
+    {
+        int width, height;
+        height = bmSrc.getHeight();
+        width = bmSrc.getWidth();
+        Bitmap bmpGray = null;
+        bmpGray = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+        Canvas c = new Canvas(bmpGray);
+        Paint paint = new Paint();
+        ColorMatrix cm = new ColorMatrix();
+        cm.setSaturation(0);
+        ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+        paint.setColorFilter(f);
+        c.drawBitmap(bmSrc, 0, 0, paint);
+        return bmpGray;
+
+    }
 
     //put actionbar back buton to mainactivity
     @Override
@@ -188,8 +207,10 @@ public class CcdActivity extends Activity {
                 this.finish();
                 return true;
             case R.id.ccd_num:
+                init_img(null);
                 return true;
             case R.id.ccd_mode:
+                ;
                 return true;
             case R.id.ccd_save:
                 ;
@@ -197,9 +218,6 @@ public class CcdActivity extends Activity {
         }
         return false;
     }
-
-
-
 
 //    /**
 //     * @param 将字节数组转换为ImageView可调用的Bitmap对象
@@ -240,7 +258,7 @@ public class CcdActivity extends Activity {
         float scaleWidth = ((float) w / width);
         float scaleHeight = ((float) h / height);
         matrix.postScale(scaleWidth, scaleHeight);
-        Bitmap newBmp = Bitmap.createBitmap(bitmap, 0, 0, width, height,
+        Bitmap newBmp = createBitmap(bitmap, 0, 0, width, height,
                 matrix, true);
         return newBmp;
     }
@@ -283,6 +301,46 @@ public class CcdActivity extends Activity {
         inStream.close();
         return data;
 
+    }
+
+    static byte[] RX_Data = new byte[200];	//接收到的数据，AA开头
+    static int rxstate = 0;
+    static int rxcnt = 0;
+    static boolean ccdDataAnl(byte[] data, int len) {
+        for (int i = 0; i < len; i++) {
+            if (rxstate == 0)//寻找开头
+            {
+                if (data[i] == (byte) 2) {
+                    rxstate = 1;
+
+                }
+            } else if (rxstate == 1)//寻找第二个AA
+            {
+                if (data[i] == (byte) ~2) {
+                    rxstate = 2;
+
+                } else
+                    rxstate = 0;
+            }else if(rxstate == 2){
+                RX_Data[rxcnt] = data[i];
+                rxcnt++;
+                if(rxcnt==128)
+                    rxstate=3;
+            }else if(rxstate ==3){
+                if (data[i] == (byte) ~2) {
+                    rxstate = 4;
+                    RX_Data[0] = (byte) ~2;
+                }
+            }else if(rxstate ==4){
+                if (data[i] == (byte) 2) {
+                    rxstate = 0;
+                    RX_Data[0] = (byte) 2;
+                    return true;
+                }
+            }
+
+        }
+        return false;
     }
 
 }

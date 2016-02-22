@@ -55,10 +55,9 @@ public class SerialPortActivity extends Activity {
     private static final boolean D = true;
 
     // Message types sent from the BluetoothChatService Handler
-    public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_DEVICE_NAME = 4;
+
+    public static final int MESSAGE_READ = 6;
+    public static final int MESSAGE_WRITE = 7;
     public static final int MESSAGE_TOAST = 5;
 
     // Key names received from the BluetoothChatService Handler
@@ -70,14 +69,15 @@ public class SerialPortActivity extends Activity {
     private static final int REQUEST_ENABLE_BT = 3;
 
     // Layout Views
-    private ListView mConversationView;
-    private EditText mOutEditText;
-    private Button  mSendButton;
-    private EditText mInEditText;
+    public static ListView mConversationView;
+    public static EditText mOutEditText;
+    public static Button  mSendButton;
+
     // Name of the connected device
     private String mConnectedDeviceName = null;
     // Array adapter for the conversation thread
-    private ArrayAdapter<String> mConversationArrayAdapter;
+    public static ArrayAdapter<String> mConversationArrayAdapter_in;
+    public static ArrayAdapter<String> mConversationArrayAdapter_out;
     // String buffer for outgoing messages
     private StringBuffer mOutStringBuffer;
     // Local Bluetooth adapter
@@ -118,7 +118,7 @@ public class SerialPortActivity extends Activity {
         }else{
             // Initialize the BluetoothChatService to perform bluetooth connections
             if (BluetoothMain.mChatService == null)
-                BluetoothMain.mChatService = new BluetoothChatService(this, mHandler);
+                this.finish();
                 setupChat();
         }
     }
@@ -144,14 +144,18 @@ public class SerialPortActivity extends Activity {
         Log.d(TAG, "setupChat()");
 
         // Initialize the array adapter for the conversation thread
-        mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
+        mConversationArrayAdapter_out = new ArrayAdapter<String>(this, R.layout.message);
         mConversationView = (ListView) findViewById(R.id.out);
-        mConversationView.setAdapter(mConversationArrayAdapter);
+        mConversationView.setAdapter(mConversationArrayAdapter_out);
 
+        // Initialize the array adapter for the conversation thread
+        mConversationArrayAdapter_in = new ArrayAdapter<String>(this, R.layout.message);
+        mConversationView = (ListView) findViewById(R.id.in);
+        mConversationView.setAdapter(mConversationArrayAdapter_in);
         //Initialize data in EditText and set scroll
-        mInEditText=(EditText)findViewById(R.id.in);
-        mInEditText.setMovementMethod(ScrollingMovementMethod.getInstance());
-        mInEditText.setSelection(mInEditText.getText().length(), mInEditText.getText().length());
+//        mInEditText=(EditText)findViewById(R.id.in);
+//        mInEditText.setMovementMethod(ScrollingMovementMethod.getInstance());
+//        mInEditText.setSelection(mInEditText.getText().length(), mInEditText.getText().length());
 
         // Initialize the compose field with a listener for the return key
         mOutEditText = (EditText) findViewById(R.id.edit_text_out);
@@ -231,43 +235,10 @@ public class SerialPortActivity extends Activity {
                 }
             };
 
-    private final void setStatus(int resId) {
-        final ActionBar actionBar = getActionBar();
-        actionBar.setSubtitle(resId);
-    }
 
-    private final void setStatus(CharSequence subTitle) {
-        final ActionBar actionBar = getActionBar();
-        actionBar.setSubtitle(subTitle);
-    }
 
-    // The Handler that gets information back from the BluetoothChatService
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
 
-                case MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    mConversationArrayAdapter.add("Me:  " + writeMessage);
-                    break;
-                case MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
 
-                    mInEditText.getText().append(readMessage);
-                    break;
-
-                case MESSAGE_TOAST:
-                    Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
-                            Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(D) Log.d(TAG, "onActivityResult " + resultCode);
@@ -316,11 +287,10 @@ public class SerialPortActivity extends Activity {
                 this.finish();
                 return true;
             case R.id.clear_in:
-                mOutStringBuffer.setLength(0);
-                mInEditText.setText(mOutStringBuffer);
+                mConversationArrayAdapter_in.clear();
                 return true;
             case R.id.clear_out:
-                mConversationArrayAdapter.clear();
+                mConversationArrayAdapter_out.clear();
                 return true;
             case R.id.change_hex:
                 ;

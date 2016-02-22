@@ -7,18 +7,13 @@
     android:layout_height="match_parent"
     >
 
-    <EditText
+    <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/in"
-        android:layout_weight="1"
-        android:scrollbars="vertical"
-        android:editable="false"
-        android:focusable="false"
-        android:singleLine="false"
-        android:background="@null"
-        android:gravity="top|left"
-        android:layout_gravity="center_horizontal" />
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll"
+        android:layout_weight="1" />
 
     <LinearLayout
         android:orientation="vertical"
