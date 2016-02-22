@@ -1,5 +1,6 @@
 package com.example.android.BluetoothMain.app;
 
+import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -9,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -16,6 +18,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -24,6 +28,8 @@ import android.widget.Toast;
 import com.example.android.BluetoothMain.BluetoothChatService;
 import com.example.android.BluetoothMain.BluetoothMain;
 import com.example.android.BluetoothMain.R;
+import com.example.android.BluetoothMain.SystemBarTintManager;
+import com.gc.materialdesign.views.ButtonRectangle;
 
 /**
  * Created by aeo on 2016/2/13.
@@ -62,11 +68,18 @@ public class DataSendActivity extends  Activity{
     private  static EditText Pid5_P, Pid5_I,Pid5_D;
     private  static EditText Pid6_P, Pid6_I,Pid6_D;
 
-    private  static Button button_send,button_read,button_check,button_checkg,button_start,button_save;
+    private  static ButtonRectangle button_send,button_read,button_check,button_checkg,button_start,button_save;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(D) Log.e(TAG, "+++ ON CREATE +++");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            setTranslucentStatus(true);
+            SystemBarTintManager tintManager = new SystemBarTintManager(this);
+            tintManager.setStatusBarTintEnabled(true);
+            tintManager.setStatusBarTintResource(R.color.top_bg_color);//通知栏所需颜色
+        }
 
         // Set up the window layout
         setContentView(R.layout.datasend_activity);
@@ -101,7 +114,7 @@ public class DataSendActivity extends  Activity{
         Pid6_I=(EditText)findViewById(R.id.pid6_i);
         Pid6_D=(EditText)findViewById(R.id.pid6_d);
 
-        button_send=(Button)findViewById(R.id.b_send);
+        button_send= (ButtonRectangle) findViewById(R.id.b_send);
         button_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -109,35 +122,35 @@ public class DataSendActivity extends  Activity{
                 Send_PID2();
             }
         });
-        button_read=(Button)findViewById(R.id.b_read);
+        button_read= (ButtonRectangle) findViewById(R.id.b_read);
         button_read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Send_Command02((byte) 0x01);
             }
         });
-        button_check=(Button)findViewById(R.id.b_check);
+        button_check= (ButtonRectangle) findViewById(R.id.b_check);
         button_check.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Send_Command((byte)0x01);
             }
         });
-        button_checkg=(Button)findViewById(R.id.b_checkg);
+        button_checkg= (ButtonRectangle) findViewById(R.id.b_checkg);
         button_checkg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Send_Command((byte)0x02);
             }
         });
-        button_save=(Button)findViewById(R.id.b_save);
+        button_save= (ButtonRectangle) findViewById(R.id.b_save);
         button_save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Send_Command((byte)0x05);
             }
         });
-        button_start=(Button)findViewById(R.id.b_start);
+        button_start= (ButtonRectangle) findViewById(R.id.b_start);
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -588,5 +601,19 @@ public class DataSendActivity extends  Activity{
         r <<= 8;
         r |= (RX_Data[cnt+1] & 0x00ff);
         return r;
+    }
+
+
+    @TargetApi(19)
+    private void setTranslucentStatus(boolean on) {
+        Window win = getWindow();
+        WindowManager.LayoutParams winParams = win.getAttributes();
+        final int bits = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
+        if (on) {
+            winParams.flags |= bits;
+        } else {
+            winParams.flags &= ~bits;
+        }
+        win.setAttributes(winParams);
     }
 }

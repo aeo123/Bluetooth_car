@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:materialdesign="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center_horizontal">
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_gravity="center_horizontal"></LinearLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -494,21 +500,20 @@
             android:id="@+id/textView6"
             android:layout_weight="1" />
     </LinearLayout>
-
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="65dp"
         android:layout_marginTop="40dp">
 
-        <Button
+        <com.gc.materialdesign.views.ButtonRectangle
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="读参数"
             android:id="@+id/b_read"
             android:layout_weight="1" />
 
-        <Button
+        <com.gc.materialdesign.views.ButtonRectangle
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="写参数"
@@ -522,14 +527,13 @@
         android:layout_height="65dp"
         android:layout_marginTop="10dp">
 
-        <Button
+        <com.gc.materialdesign.views.ButtonRectangle
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="传感器矫正"
             android:id="@+id/b_check"
             android:layout_weight="1" />
-
-        <Button
+        <com.gc.materialdesign.views.ButtonRectangle
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="陀螺仪矫正"
@@ -543,14 +547,14 @@
         android:layout_height="65dp"
         android:layout_marginTop="10dp">
 
-        <Button
+        <com.gc.materialdesign.views.ButtonRectangle
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="启动/停止"
             android:id="@+id/b_start"
             android:layout_weight="1" />
 
-        <Button
+        <com.gc.materialdesign.views.ButtonRectangle
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="保存参数"

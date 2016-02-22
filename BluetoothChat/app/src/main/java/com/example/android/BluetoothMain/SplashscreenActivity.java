@@ -17,16 +17,26 @@ public class SplashscreenActivity extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splashscreen);
 
-        // Jump to SensorsActivity after DELAY milliseconds
-        new Handler().postDelayed(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                final Intent intent = new Intent(SplashscreenActivity.this, BluetoothMain.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                startActivity(intent);
-                finish();
+                try {
+                    //首页启动图片显示2秒后跳转
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                }
+                runOnUiThread(new Runnable() {
+                    /**
+                     *跳转到MainTivity
+                     */
+                    @Override
+                    public void run() {
+                        startActivity(new Intent(SplashscreenActivity.this, BluetoothMain.class));   //跳转到检测蓝牙界面
+                        finish();   //销毁当前页面
+                    }
+                });
             }
-        }, DELAY);
+        }).start();
     }
 
     @Override
