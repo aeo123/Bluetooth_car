@@ -223,14 +223,14 @@ public class CcdActivity extends Activity {
         temp[130] = ~(byte) 0x02;
         temp[131] = (byte) 0x02;
         for (int i = 2; i < 130; i++) {
-            temp[i] = (byte) (i - 2);
+            temp[i] = (byte) (128-i);
         }
         ccdDataAnl(temp, 138);
     }
 
     private static void show_img(byte[] a) {
         for (int i = 0; i < WIDTH; i++) {
-            img1[i] = ((a[i] & 0xff)) << 24;
+            img1[i] = (((a[i] & 0xff)) << 24) & (0xff<<24 | 0<<16 | 0<<8 | 0);
         }
         for (int i = 0; i < HEIGHT; i++) {
             System.arraycopy(img1, 0, img, WIDTH * i, WIDTH);

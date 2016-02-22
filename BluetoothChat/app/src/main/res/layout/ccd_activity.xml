@@ -159,7 +159,8 @@
         android:id="@+id/single_ccd"
         android:layout_weight="6"
         android:layout_marginTop="10dp"
-        android:background="@drawable/border_black" />
+        android:background="@drawable/border_black"
+        android:layout_gravity="left" />
 
     <LinearLayout
         android:orientation="vertical"

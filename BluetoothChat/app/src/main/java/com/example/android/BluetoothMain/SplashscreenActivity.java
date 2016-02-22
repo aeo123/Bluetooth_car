@@ -10,7 +10,7 @@ import android.os.Handler;
  */
 public class SplashscreenActivity extends Activity{
     /** Splash screen duration time in milliseconds */
-    private static final int DELAY = 1000;
+    private static final int DELAY = 2000;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
