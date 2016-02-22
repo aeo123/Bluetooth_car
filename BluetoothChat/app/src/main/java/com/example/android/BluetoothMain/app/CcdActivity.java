@@ -211,7 +211,7 @@ public class CcdActivity extends Activity {
     }
 
     private static final int WIDTH = 128;
-    private static final int HEIGHT = 60;
+    private static final int HEIGHT = 56;
     private static final int STRIDE = 128;//must be >=WIDTH
     private static int[] img = new int[WIDTH * HEIGHT];
     private static int[] img1 = new int[WIDTH];
@@ -223,7 +223,7 @@ public class CcdActivity extends Activity {
         temp[130] = ~(byte) 0x02;
         temp[131] = (byte) 0x02;
         for (int i = 2; i < 130; i++) {
-            temp[i] = (byte) (128-i);
+            temp[i] = (byte) (1.5*i);
         }
         ccdDataAnl(temp, 138);
     }

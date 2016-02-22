@@ -154,13 +154,12 @@
     </LinearLayout>
 
     <ImageView
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="match_parent"
         android:id="@+id/single_ccd"
         android:layout_weight="6"
         android:layout_marginTop="10dp"
-        android:background="@drawable/border_black"
-        android:layout_gravity="left" />
+        android:background="@drawable/border_black" />
 
     <LinearLayout
         android:orientation="vertical"
