@@ -153,26 +153,17 @@
         </LinearLayout>
     </LinearLayout>
 
-    <ImageView
-        android:layout_width="fill_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/single_ccd"
-        android:layout_weight="6"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/border_black" />
-
-    <LinearLayout
-        android:orientation="vertical"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="4"
-        android:background="@drawable/border_black"
-        android:layout_marginTop="-2dp">
+        android:layout_weight="4">
+        <com.example.android.BluetoothMain.app.MySurfaceView
+            android:id="@+id/innerView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ffffff">
+        </com.example.android.BluetoothMain.app.MySurfaceView>
 
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/continuous_view" />
-    </LinearLayout>
+    </FrameLayout>
 
 </LinearLayout>

@@ -83,7 +83,7 @@ public class BluetoothMain extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(D) Log.e(TAG, "+++ ON CREATE +++");
+        if (D) Log.e(TAG, "+++ ON CREATE +++");
 
         // Set up the window layout
         setContentView(R.layout.main);
@@ -106,7 +106,7 @@ public class BluetoothMain extends Activity {
         }
         new dataThread().start();
         //triger uart app
-        ImageView icon1=(ImageView)findViewById(R.id.icon1);
+        ImageView icon1 = (ImageView) findViewById(R.id.icon1);
         icon1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -117,22 +117,22 @@ public class BluetoothMain extends Activity {
             }
         });
         //triger ccd app
-        ImageView icon2=(ImageView)findViewById(R.id.icon2);
-        icon2.setOnClickListener(new View.OnClickListener(){
+        ImageView icon2 = (ImageView) findViewById(R.id.icon2);
+        icon2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Intent intent = new Intent(BluetoothMain.this,CcdActivity.class);
+                final Intent intent = new Intent(BluetoothMain.this, CcdActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
                 //finish();
             }
         });
         //triger data app
-        ImageView icon3=(ImageView)findViewById(R.id.icon3);
-        icon3.setOnClickListener(new View.OnClickListener(){
+        ImageView icon3 = (ImageView) findViewById(R.id.icon3);
+        icon3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Intent intent = new Intent(BluetoothMain.this,DataSendActivity.class);
+                final Intent intent = new Intent(BluetoothMain.this, DataSendActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
                 //finish();
@@ -143,24 +143,24 @@ public class BluetoothMain extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-        if(D) Log.e(TAG, "++ ON START ++");
+        if (D) Log.e(TAG, "++ ON START ++");
 
         // If BT is not on, request that it be enabled.
         // setupChat() will then be called during onActivityResult
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        // Otherwise, setup the chat session
+            // Otherwise, setup the chat session
         } else {
             if (mChatService == null)
-                mChatService = new BluetoothChatService(this, mHandler);
+                mChatService = new BluetoothChatService(this, mHandler,dHandler);
         }
     }
 
     @Override
     public synchronized void onResume() {
         super.onResume();
-        if(D) Log.e(TAG, "+ ON RESUME +");
+        if (D) Log.e(TAG, "+ ON RESUME +");
 
         // Performing this check in onResume() covers the case in which BT was
         // not enabled during onStart(), so we were paused to enable it...
@@ -168,39 +168,39 @@ public class BluetoothMain extends Activity {
         if (mChatService != null) {
             // Only if the state is STATE_NONE, do we know that we haven't started already
             if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
-              // Start the Bluetooth chat services
-              mChatService.start();
+                // Start the Bluetooth chat services
+                mChatService.start();
             }
             mChatService.setAppState(mChatService.APP_MIAN);
-        }else
-            mChatService = new BluetoothChatService(this, mHandler);
+        } else
+            mChatService = new BluetoothChatService(this, mHandler,dHandler);
 
     }
 
     @Override
-    public synchronized void onPause () {
+    public synchronized void onPause() {
         super.onPause();
-        if(D) Log.e(TAG, "- ON PAUSE -");
+        if (D) Log.e(TAG, "- ON PAUSE -");
     }
 
     @Override
-    public void onStop () {
+    public void onStop() {
         super.onStop();
-        if(D) Log.e(TAG, "-- ON STOP --");
+        if (D) Log.e(TAG, "-- ON STOP --");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         // Stop the Bluetooth chat services
-       if (mChatService != null) mChatService.stop();
-        if(D) Log.e(TAG, "--- ON DESTROY ---");
+        if (mChatService != null) mChatService.stop();
+        if (D) Log.e(TAG, "--- ON DESTROY ---");
     }
 
     private void ensureDiscoverable() {
-        if(D) Log.d(TAG, "ensure discoverable");
+        if (D) Log.d(TAG, "ensure discoverable");
         if (mBluetoothAdapter.getScanMode() !=
-            BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+                BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             startActivity(discoverableIntent);
@@ -221,105 +221,98 @@ public class BluetoothMain extends Activity {
     }
 
     // The Handler that gets information back from the BluetoothChatService
-     private   Handler mHandler = new Handler() {
+    private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-            case MESSAGE_STATE_CHANGE:
-                if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
-                switch (msg.arg1) {
-                case BluetoothChatService.STATE_CONNECTED:
-                    setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
+                case MESSAGE_STATE_CHANGE:
+                    if (D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+                    switch (msg.arg1) {
+                        case BluetoothChatService.STATE_CONNECTED:
+                            setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
+                            break;
+                        case BluetoothChatService.STATE_CONNECTING:
+                            setStatus(R.string.title_connecting);
+                            break;
+                        case BluetoothChatService.STATE_LISTEN:
+                        case BluetoothChatService.STATE_NONE:
+                            setStatus(R.string.title_not_connected);
+                            break;
+                    }
                     break;
-                case BluetoothChatService.STATE_CONNECTING:
-                    setStatus(R.string.title_connecting);
+                case MESSAGE_WRITE:
+                    if (mChatService.getAppState() == mChatService.APP_UART) {
+                        byte[] writeBuf = (byte[]) msg.obj;
+                        // construct a string from the buffer
+                        String writeMessage = new String(writeBuf);
+                        SerialPortActivity.mConversationArrayAdapter_out.add("Me:  " + writeMessage);
+                    }
                     break;
-                case BluetoothChatService.STATE_LISTEN:
-                case BluetoothChatService.STATE_NONE:
-                    setStatus(R.string.title_not_connected);
+                case MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    String readMessage = new String(readBuf, 0, msg.arg1);
+                    switch (mChatService.getAppState()) {
+                        case BluetoothChatService.APP_UART:
+                            SerialPortActivity.mConversationArrayAdapter_in.add(mConnectedDeviceName + ": " + readMessage);
+                            mChatService.setDataProcess(false);
+                            break;
+                        case BluetoothChatService.APP_DATA:
+                            DataSendActivity.DataAnl(readBuf, msg.arg1);
+                            mChatService.setDataProcess(false);
+                            break;
+                        default:
+                            mChatService.setDataProcess(false);
+                            break;
+                    }
+                    // Send the obtained bytes to the UI Activity
                     break;
-                }
-                break;
-            case MESSAGE_WRITE:
-                if(mChatService.getAppState() == mChatService.APP_UART) {
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    SerialPortActivity.mConversationArrayAdapter_out.add("Me:  " + writeMessage);
-                }
-                break;
-            case MESSAGE_READ:
-//                dHandler.obtainMessage(MESSAGE_READ, msg.arg1, -1, msg.obj)
-//                        .sendToTarget();
-                byte[] readBuf = (byte[]) msg.obj;
-                // construct a string from the valid bytes in the buffer
-                String readMessage = new String(readBuf, 0, msg.arg1);
-
-                switch (mChatService.getAppState()) {
-                    case BluetoothChatService.APP_UART:
-                        SerialPortActivity.mConversationArrayAdapter_in.add(mConnectedDeviceName+": " +readMessage);
-                        break;
-                    case BluetoothChatService.APP_CCD:
-                        CcdActivity.ccdDataAnl(readBuf,msg.arg1);
-                        break;
-                    case BluetoothChatService.APP_CAMERA:
-//                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
-//                                    .sendToTarget();
-                        break;
-                    case BluetoothChatService.APP_DATA:
-                            DataSendActivity.DataAnl(readBuf,msg.arg1);
-                        break;
-                }
-                // Send the obtained bytes to the UI Activity
-
-                break;
-            case MESSAGE_DEVICE_NAME:
-                // save the connected device's name
-                mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-                Toast.makeText(getApplicationContext(), "Connected to "
-                               + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-                break;
-            case MESSAGE_TOAST:
-                Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
-                               Toast.LENGTH_SHORT).show();
-                break;
+                case MESSAGE_DEVICE_NAME:
+                    // save the connected device's name
+                    mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+                    Toast.makeText(getApplicationContext(), "Connected to "
+                            + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                    break;
+                case MESSAGE_TOAST:
+                    Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
+                            Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
     };
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-            if(D) Log.d(TAG, "onActivityResult " + resultCode);
-            switch (requestCode) {
-        case REQUEST_CONNECT_DEVICE_SECURE:
-            // When DeviceListActivity returns with a device to connect
-            if (resultCode == Activity.RESULT_OK) {
-                connectDevice(data, true);
-            }
-            break;
-        case REQUEST_CONNECT_DEVICE_INSECURE:
-            // When DeviceListActivity returns with a device to connect
-            if (resultCode == Activity.RESULT_OK) {
-                connectDevice(data, false);
-            }
-            break;
-        case REQUEST_ENABLE_BT:
-            // When the request to enable Bluetooth returns
-            if (resultCode == Activity.RESULT_OK) {
-                // Bluetooth is now enabled, so set up a chat session
-                //setupChat();
-            } else {
-                // User did not enable Bluetooth or an error occurred
-                Log.d(TAG, "BT not enabled");
-                Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
-                finish();
-            }
+        if (D) Log.d(TAG, "onActivityResult " + resultCode);
+        switch (requestCode) {
+            case REQUEST_CONNECT_DEVICE_SECURE:
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    connectDevice(data, true);
+                }
+                break;
+            case REQUEST_CONNECT_DEVICE_INSECURE:
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    connectDevice(data, false);
+                }
+                break;
+            case REQUEST_ENABLE_BT:
+                // When the request to enable Bluetooth returns
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, so set up a chat session
+                    //setupChat();
+                } else {
+                    // User did not enable Bluetooth or an error occurred
+                    Log.d(TAG, "BT not enabled");
+                    Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
         }
     }
 
     private void connectDevice(Intent data, boolean secure) {
         // Get the device MAC address
         String address = data.getExtras()
-            .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
         // Get the BluetoothDevice object
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         // Attempt to connect to the device
@@ -353,64 +346,66 @@ public class BluetoothMain extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent serverIntent = null;
         switch (item.getItemId()) {
-        case R.id.secure_connect_scan:
-            // Launch the DeviceListActivity to see devices and do scan
-            serverIntent = new Intent(this, DeviceListActivity.class);
-            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-            return true;
-        case R.id.insecure_connect_scan:
-            // Launch the DeviceListActivity to see devices and do scan
+            case R.id.secure_connect_scan:
+                // Launch the DeviceListActivity to see devices and do scan
+                serverIntent = new Intent(this, DeviceListActivity.class);
+                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+                return true;
+            case R.id.insecure_connect_scan:
+                // Launch the DeviceListActivity to see devices and do scan
 //            serverIntent = new Intent(this, DeviceListActivity.class);
 //            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
-            mChatService.stop();
-            return true;
-        case R.id.discoverable:
-            // Ensure this device is discoverable by others
-            ensureDiscoverable();
-            return true;
+                mChatService.stop();
+                return true;
+            case R.id.discoverable:
+                // Ensure this device is discoverable by others
+                ensureDiscoverable();
+                return true;
         }
         return false;
     }
 
-    class dataThread extends Thread
-    {
+    class dataThread extends Thread {
         @Override
         public void run() {
-        //建立消息循环的步骤
-            Looper.prepare();//1、初始化Loope
+            //建立消息循环的步骤
+            Looper.prepare();//1、初始化Loop
             dHandler = new Handler() {
                 @Override
                 public void handleMessage(Message msg) {//3、定义处理消息的方法
                     switch (msg.what) {
                         case MESSAGE_READ:
                             byte[] readBuf = (byte[]) msg.obj;
-                            // construct a string from the valid bytes in the buffer
                             String readMessage = new String(readBuf, 0, msg.arg1);
-
                             switch (mChatService.getAppState()) {
                                 case BluetoothChatService.APP_UART:
-                                    SerialPortActivity.mConversationArrayAdapter_in.add(mConnectedDeviceName + ": " + readMessage);
+                                    mHandler.obtainMessage(BluetoothMain.MESSAGE_READ, msg.arg1, -1, readBuf)
+                                            .sendToTarget();
                                     break;
                                 case BluetoothChatService.APP_CCD:
-//                            mHandler.obtainMessage(CcdActivity.MESSAGE_READ, bytes, -1, buffer)
-//                                    .sendToTarget();
+                                    CcdActivity.ccdDataAnl((byte[])msg.obj,msg.arg1);
+                                    //mHandler.sendEmptyMessage(0);
+                                    mChatService.setDataProcess(false);
                                     break;
                                 case BluetoothChatService.APP_CAMERA:
-//                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
-//                                    .sendToTarget();
                                     break;
                                 case BluetoothChatService.APP_DATA:
-//                            mHandler.obtainMessage(SerialPortActivity.MESSAGE_READ, bytes, -1, buffer)
-//                                    .sendToTarget();
+                                    mHandler.obtainMessage(BluetoothMain.MESSAGE_READ, msg.arg1, -1, readBuf)
+                                            .sendToTarget();
+                                    break;
+                                default:
+                                    mChatService.setDataProcess(false);
                                     break;
                             }
-                            break;
                     }
                 }
+
             };
-        Looper.loop();//4、启动消息循环
+
+            Looper.loop();//4、启动消息循环
+        }
     }
-}
+
     @TargetApi(19)
     private void setTranslucentStatus(boolean on) {
         Window win = getWindow();

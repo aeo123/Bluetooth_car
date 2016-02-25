@@ -4,14 +4,17 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.Image;
 import android.os.Build;
@@ -24,6 +27,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -47,6 +52,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import static android.graphics.Bitmap.createBitmap;
 
@@ -61,9 +67,8 @@ public class CcdActivity extends Activity {
     private static final int REQUEST_ENABLE_BT = 3;
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
-    private static ImageView ig_ccd;
-    private static ListView ccd_list;
-    private static View ccd_view;
+
+    private static MySurfaceView surfaceview_ccd = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,40 +92,10 @@ public class CcdActivity extends Activity {
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
 
-        ig_ccd = (ImageView) findViewById(R.id.single_ccd);
-        ccd_list = (ListView) findViewById(R.id.continuous_view);
-        ccd_view = LayoutInflater.from(this).inflate(R.layout.ccd_fps, null);
-        ccd_list.setAdapter(ccd_adpter);
+        surfaceview_ccd = (MySurfaceView) findViewById(R.id.innerView);
+        // surface_ccd=(SurfaceView)findViewById(R.id.continuous_view);
     }
 
-    BaseAdapter ccd_adpter = new BaseAdapter() {
-        @Override
-        public int getCount() {
-            return 0;
-        }
-
-        @Override
-        public Object getItem(int i) {
-            return null;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View view, ViewGroup parent) {
-            ImageView img;
-            if (view == null) {
-                img = new ImageView(CcdActivity.this);
-            } else {
-                img = (ImageView) view;
-            }
-            //img.;
-            return img;
-        }
-    };
 
     @Override
     public void onStart() {
@@ -136,6 +111,7 @@ public class CcdActivity extends Activity {
             // Initialize the BluetoothChatService to perform bluetooth connections
             if (BluetoothMain.mChatService == null)
                 this.finish();
+
         }
     }
 
@@ -152,8 +128,9 @@ public class CcdActivity extends Activity {
                 Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
             }
             BluetoothMain.mChatService.setAppState(BluetoothMain.mChatService.APP_CCD);
-        }
 
+        }
+        init_img(null);
     }
 
     @Override
@@ -211,35 +188,62 @@ public class CcdActivity extends Activity {
     }
 
     private static final int WIDTH = 128;
-    private static final int HEIGHT = 56;
+    private static final int HEIGHT = 1000;
+    private static final int Half_HEIGHT = 200;
     private static final int STRIDE = 128;//must be >=WIDTH
     private static int[] img = new int[WIDTH * HEIGHT];
     private static int[] img1 = new int[WIDTH];
+    private static int[] img2 = new int[WIDTH*5];
     private static byte[] temp = new byte[WIDTH + 10];
 
-    private static void init_img(int[] a) {
+    private  static  int count=0;
+    public static void init_img(int[] a) {
         temp[0] = (byte) 0x02;
         temp[1] = ~(byte) 0x02;
         temp[130] = ~(byte) 0x02;
         temp[131] = (byte) 0x02;
         for (int i = 2; i < 130; i++) {
-            temp[i] = (byte) (1.5*i);
+            temp[i] = (byte) (1.5 * i);
         }
         ccdDataAnl(temp, 138);
+        rxcnt = 0;
+        rxstate = 0;
+        Arrays.fill(img,0); //全部清0
+
     }
 
-    private static void show_img(byte[] a) {
+    private static Bitmap[] get_img(byte[] a) {
         for (int i = 0; i < WIDTH; i++) {
-            img1[i] = (((a[i] & 0xff)) << 24) & (0xff<<24 | 0<<16 | 0<<8 | 0);
+            img1[i] = (((~a[i] & 0xff)) << 24) & (0xff << 24 | 0 << 16 | 0 << 8 | 0);
         }
-        for (int i = 0; i < HEIGHT; i++) {
-            System.arraycopy(img1, 0, img, WIDTH * i, WIDTH);
+        count++;
+        if(count==(HEIGHT-Half_HEIGHT)) {
+            count = 1;
+            Arrays.fill(img,0); //全部清0
         }
-        Bitmap[] pic = new Bitmap[1];
-        pic[0] = Bitmap.createBitmap(img, 0, STRIDE, WIDTH, HEIGHT, Bitmap.Config.ARGB_8888);
-        ig_ccd.setImageBitmap(pic[0]);
+        for(int i=0;i<Half_HEIGHT;i++)
+        {
+            System.arraycopy(img1,0,img,WIDTH*i,WIDTH);
+        }
+     //   System.arraycopy(img1,0,img2,WIDTH*((count-1)%5),WIDTH);
+//        if(count%5==0){
+//            for(int i=0;i<5;i++)
+//            {
+//                System.arraycopy(img2,0,img,WIDTH*i,WIDTH);
+//            }
+//        }
+        System.arraycopy(img1,0,img,WIDTH*(Half_HEIGHT+count-1),WIDTH);
+        Bitmap[] pic = new Bitmap[2];
+        pic[0] = Bitmap.createBitmap(img, 0, STRIDE, WIDTH, Half_HEIGHT+count, Bitmap.Config.ARGB_8888);
+        //pic[1] = zoomBitmap(pic[0], 720, 700);
+        return pic;
     }
 
+    private static Bitmap[] show_img(byte[] a) {
+        Bitmap[] pic = get_img(a);
+        surfaceview_ccd.Set_Pic(pic[0]);
+        return pic;
+    }
 
     //put actionbar back buton to mainactivity
     @Override
@@ -278,22 +282,11 @@ public class CcdActivity extends Activity {
         return null;
     }
 
-    /**
-     * 把Bitmap转Byte
-     */
-    public static byte[] Bitmap2Bytes(Bitmap bm) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        return baos.toByteArray();
-    }
-
-    //    /**
-//     * @param 图片缩放
+    //     * @param 图片缩放
 //     * @param bitmap 对象
 //     * @param w 要缩放的宽度
 //     * @param h 要缩放的高度
 //     * @return newBmp 新 Bitmap对象
-//     */
     public static Bitmap zoomBitmap(Bitmap bitmap, int w, int h) {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
@@ -305,6 +298,28 @@ public class CcdActivity extends Activity {
                 matrix, true);
         return newBmp;
     }
+
+    private static Bitmap add2Bitmap(Bitmap bit1, Bitmap bit2) {
+        int width = bit1.getWidth();
+        int height = bit1.getHeight() + bit2.getHeight();
+        //创建一个空的Bitmap(内存区域),宽度等于第一张图片的宽度，高度等于两张图片高度总和
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        //将bitmap放置到绘制区域,并将要拼接的图片绘制到指定内存区域
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawBitmap(bit1, 0, 0, null);
+        canvas.drawBitmap(bit2, 0, bit1.getHeight(), null);
+        return bitmap;
+    }
+
+    /**
+     * 把Bitmap转Byte
+     */
+    public static byte[] Bitmap2Bytes(Bitmap bm) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        return baos.toByteArray();
+    }
+
 
     /**
      * 把字节数组保存为一个文件
@@ -345,17 +360,18 @@ public class CcdActivity extends Activity {
         return data;
     }
 
-    static byte[] RX_Data = new byte[128];    //接收到的数据，AA开头
-    static int rxstate = 0;
-    static int rxcnt = 0;
+    private static byte[] RX_Data = new byte[128];    //接收到的数据，AA开头
+    private static int rxstate = 0;
+    private static int rxcnt = 0;
 
-    public static boolean ccdDataAnl(byte[] data, int len) {
+    public static void ccdDataAnl(byte[] data, int len) {
         for (int i = 0; i < len; i++) {
             if (rxstate == 0)//寻找开头02
             {
                 if (data[i] == (byte) 0x02) {
                     rxstate = 1;
-                }
+                } else
+                    rxstate = 0;
             } else if (rxstate == 1)//寻找第二个~2
             {
                 if (data[i] == ~((byte) 0x02)) {
@@ -379,14 +395,12 @@ public class CcdActivity extends Activity {
             } else if (rxstate == 4) {
                 if (data[i] == (byte) 0x02) {
                     rxstate = 0;
-                    // RX_Data[++rxcnt] = (byte) 0x02;
                     show_img(RX_Data);
-                    return true;
                 } else
                     rxstate = 0;
-            }
+            } else
+                rxstate = 0;
         }
-        return false;
     }
 
     @TargetApi(19)
@@ -401,4 +415,6 @@ public class CcdActivity extends Activity {
         }
         win.setAttributes(winParams);
     }
+
+
 }

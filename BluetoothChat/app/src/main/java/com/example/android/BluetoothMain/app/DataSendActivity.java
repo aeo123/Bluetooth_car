@@ -169,7 +169,7 @@ public class DataSendActivity extends Activity {
             }
         });
 
-        ui_handler.postDelayed(ui_task, 200);
+        ui_handler.postDelayed(ui_task,500);
     }
 
 

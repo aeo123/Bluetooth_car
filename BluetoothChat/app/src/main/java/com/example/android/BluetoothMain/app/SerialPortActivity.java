@@ -40,6 +40,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -130,6 +131,7 @@ public class SerialPortActivity extends Activity {
             // Initialize the BluetoothChatService to perform bluetooth connections
             if (BluetoothMain.mChatService == null)
                 this.finish();
+            else
                 setupChat();
         }
     }
@@ -181,6 +183,8 @@ public class SerialPortActivity extends Activity {
                 String message = view.getText().toString();
                 sendMessage(message);
                 //mInEditText.getText().append(message);
+                //mConversationArrayAdapter_in.add(": " + message);
+
             }
         });
 
