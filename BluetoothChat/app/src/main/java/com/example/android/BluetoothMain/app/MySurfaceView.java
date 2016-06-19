@@ -83,7 +83,7 @@ class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                 //画图
                 //canvas.drawColor(Color.WHITE);
                 canvas.drawRect(new Rect(0, 0, getWidth(), getHeight()), paint);
-                canvas.drawBitmap(draw_bitmap, null, new Rect(0, 0, 720, draw_bitmap.getHeight()), null);
+                canvas.drawBitmap(draw_bitmap, null, new Rect(0, 0, getWidth(), draw_bitmap.getHeight()), null);
                 //canvas.drawRect(new Rect(0, 0, getWidth(), getHeight()), paint);
                 //canvas.drawBitmap(draw_bitmap, 1, 1, paint);
             }else {

@@ -198,14 +198,14 @@ public class CcdActivity extends Activity {
 
     private  static  int count=0;
     public static void init_img(int[] a) {
-        temp[0] = (byte) 0x02;
-        temp[1] = ~(byte) 0x02;
-        temp[130] = ~(byte) 0x02;
-        temp[131] = (byte) 0x02;
-        for (int i = 2; i < 130; i++) {
-            temp[i] = (byte) (1.5 * i);
-        }
-        ccdDataAnl(temp, 138);
+//        temp[0] = (byte) 0x02;
+//        temp[1] = ~(byte) 0x02;
+//        temp[130] = ~(byte) 0x02;
+//        temp[131] = (byte) 0x02;
+//        for (int i = 2; i < 130; i++) {
+//            temp[i] = (byte) (1.5 * i);
+//        }
+//        ccdDataAnl(temp, 138);
         rxcnt = 0;
         rxstate = 0;
         Arrays.fill(img,0); //全部清0

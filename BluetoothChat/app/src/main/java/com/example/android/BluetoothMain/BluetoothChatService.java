@@ -501,11 +501,12 @@ public class BluetoothChatService {
             Log.i(TAG, "BEGIN mConnectedThread");
             byte[] buffer = new byte[1024];
             int bytes;
-
+            long startTime=0;
+            long endTime=0;
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
-
+                    int a;
                     // Read from the InputStream
                     if (dataProcess == false) {
                         dataProcess = true;
@@ -517,11 +518,12 @@ public class BluetoothChatService {
                         dataHandler.sendMessage(msg);
 //                        dataHandler.obtainMessage(BluetoothMain.MESSAGE_READ, bytes, -1, buffer)
 //                                .sendToTarget();
+                         startTime = System.currentTimeMillis();
                     }
-
-
-
-
+                     endTime = System.currentTimeMillis();
+                    int diffTime  = (int)(endTime - startTime);
+                    if(diffTime>2000)   //大于2s
+                        dataProcess = false;
 //                   try{
 //                        Thread.sleep(20);//有异常需要捕获
 //                    }catch(Exception e){
@@ -547,7 +549,6 @@ public class BluetoothChatService {
                 mmOutStream.write(buffer);
 
                 // Share the sent message back to the UI Activity
-
                 mHandler.obtainMessage(BluetoothMain.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
             } catch (IOException e) {
