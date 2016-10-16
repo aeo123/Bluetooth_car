@@ -195,6 +195,7 @@ public class BluetoothMain extends Activity {
         // Stop the Bluetooth chat services
         if (mChatService != null) mChatService.stop();
         if (D) Log.e(TAG, "--- ON DESTROY ---");
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     private void ensureDiscoverable() {
@@ -355,7 +356,7 @@ public class BluetoothMain extends Activity {
                 // Launch the DeviceListActivity to see devices and do scan
 //            serverIntent = new Intent(this, DeviceListActivity.class);
 //            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
-                mChatService.stop();
+                if (mChatService != null) mChatService.stop();
                 return true;
             case R.id.discoverable:
                 // Ensure this device is discoverable by others

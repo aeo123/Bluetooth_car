@@ -2,16 +2,16 @@
 
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/ccd_num"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="@string/ccd_num"
-        android:showAsAction="ifRoom|withText" />
-    <item android:id="@+id/ccd_mode"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="@string/ccd_mode"
-        android:showAsAction="ifRoom|withText" />
-    <item android:id="@+id/ccd_save"
-        android:icon="@android:drawable/ic_menu_mylocation"
-        android:title="@string/ccd_save"
-        android:showAsAction="ifRoom|withText" />
+<item android:id="@+id/ccd_num"
+    android:icon="@android:drawable/ic_menu_search"
+    android:title="@string/ccd_num"
+    android:showAsAction="ifRoom|withText" />
+<item android:id="@+id/ccd_mode"
+    android:icon="@android:drawable/ic_menu_search"
+    android:title="@string/ccd_mode"
+    android:showAsAction="ifRoom|withText" />
+<item android:id="@+id/ccd_save"
+    android:icon="@android:drawable/ic_menu_mylocation"
+    android:title="@string/ccd_save"
+    android:showAsAction="ifRoom|withText" />
 </menu>

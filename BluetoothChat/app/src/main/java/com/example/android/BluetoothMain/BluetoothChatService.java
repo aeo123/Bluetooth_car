@@ -507,7 +507,7 @@ public class BluetoothChatService {
             while (true) {
                 try {
                     int a;
-                    // Read from the InputStream
+
                     if (dataProcess == false) {
                         dataProcess = true;
                         bytes = mmInStream.read(buffer);
@@ -516,8 +516,6 @@ public class BluetoothChatService {
                         msg.arg1=bytes;
                         msg.what = BluetoothMain.MESSAGE_READ;
                         dataHandler.sendMessage(msg);
-//                        dataHandler.obtainMessage(BluetoothMain.MESSAGE_READ, bytes, -1, buffer)
-//                                .sendToTarget();
                          startTime = System.currentTimeMillis();
                     }
                      endTime = System.currentTimeMillis();
